@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  {{ $titulo := cond .IsHome (printf "%s · Dictámenes y decisiones" site.Title) (printf "%s · %s" .Title site.Title) }}
+  {{ $titulo := cond .IsHome (printf "%s · El docket de la Corte Suprema" site.Title) (printf "%s · %s" .Title site.Title) }}
   <title>{{ $titulo }}</title>
   <meta name="description" content="{{ site.Params.descripcion }}">
   <meta property="og:type" content="website">
