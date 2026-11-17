@@ -1,0 +1,11 @@
+baseURL = "https://ramiroau.github.io/observatoriocsjn/"
+languageCode = "es-ar"
+defaultContentLanguage = "es"
+title = "Observatorio CSJN"
+disableKinds = ["taxonomy", "term", "RSS", "section", "sitemap", "404"]
+
+[params]
+  descripcion = "Cuánto tarda la Corte Suprema en decidir un caso después de que dictamina la Procuración General: cada dictamen publicado desde 2015, con la decisión que le siguió."
+
+[markup.goldmark.renderer]
+  unsafe = false

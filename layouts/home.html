@@ -1,0 +1,188 @@
+{{ define "main" }}
+{{ $p := .Params }}
+<h1>Dictámenes y decisiones</h1>
+<p class="bajada">Cuánto tarda la Corte en decidir un caso después de que dictamina la Procuración General. Cada uno de
+  los {{ $p.n | lang.FormatNumber 0 }} dictámenes publicados desde 2015, con la decisión de la Corte que le siguió en
+  el mismo expediente y los días entre una y otra.</p>
+<p>La Corte no publica qué casos tiene pendientes. Los dictámenes sí son públicos y tienen fecha: antes de decidir
+  muchos casos, la Corte da vista a la Procuración General, que opina por escrito. Un dictamen muestra, entonces, que
+  el caso está en la Corte y en condiciones de ser decidido. Por eso reconstruimos con ellos la agenda de la Corte:
+  {{ $p.decididos | lang.FormatNumber 0 }} dictámenes ya tienen la decisión que les siguió y
+  {{ $p.esperando | lang.FormatNumber 0 }} siguen esperando. No es toda la agenda: los casos que la Corte decide sin
+  dar vista a la Procuración no aparecen aquí. Qué significa cada categoría, al final de la página
+  (<a href="#categorias">Las categorías</a>).</p>
+
+<section class="filtros" id="filtros" data-src="{{ $p.datos | relURL }}">
+  <div class="fila">
+    <label>Dictamen desde <input type="number" id="desde" inputmode="numeric" placeholder="2015" min="2015" max="2026"></label>
+    <label>hasta <input type="number" id="hasta" inputmode="numeric" placeholder="2026" min="2015" max="2026"></label>
+    <span class="rapidos">
+      <button type="button" data-desde="2015" data-hasta="2018">2015–2018</button>
+      <button type="button" data-desde="2019" data-hasta="2021">2019–2021</button>
+      <button type="button" data-desde="2022" data-hasta="2024">2022–2024</button>
+      <button type="button" data-desde="2025" data-hasta="">desde 2025</button>
+      <button type="button" data-desde="" data-hasta="">todos</button>
+    </span>
+  </div>
+  <div class="fila">
+    <label>Estado <select id="estado">
+      <option value="">todos</option>
+      <option value="decidido">decididos</option>
+      <option value="esperando">esperando decisión</option>
+      <option value="sin">sin expediente</option>
+    </select></label>
+    <label>Asunto <select id="asunto"><option value="">todos</option></select></label>
+    <label>Tribunal de origen <select id="camara"><option value="">todos</option></select></label>
+    <label>Por qué espera <select id="motivo"><option value="">—</option></select></label>
+  </div>
+  <div class="fila">
+    <label>Firma <select id="firma"><option value="">todas</option></select></label>
+    <label>Resultado <select id="sentido"><option value="">todos</option></select></label>
+    <label>La Corte remite <select id="remision"><option value="">—</option></select></label>
+  </div>
+  <div class="fila">
+    <input class="filtro" type="search" id="texto" placeholder="Carátula, expediente o voz" aria-label="Buscar por carátula, expediente o voz">
+    <button type="button" class="mas" id="limpiar">Quitar los filtros</button>
+  </div>
+</section>
+
+<div class="cifras" id="cifras" aria-live="polite"></div>
+
+<section>
+  <h2>Cada dictamen, y cuánto tardó la Corte</h2>
+  <div class="grafo plano" id="dispersion" aria-label="Fecha de cada dictamen y días hasta la decisión de la Corte"></div>
+  <p class="leyenda"><span class="l-decidido"></span>decidido: a la altura de los días que tardó la Corte
+    <span class="l-esperando"></span>esperando: los días transcurridos hasta el {{ time.Format "2/1/2006" $p.hasta }}.
+    Los casos que esperan forman la diagonal: cuanto más viejo el dictamen, más alto. Pasá el cursor sobre un punto
+    para ver el caso; hacé clic para fijarlo.</p>
+  <div id="detalle" class="detalle" hidden></div>
+</section>
+
+<section>
+  <h2>Qué parte se decidió, según el tiempo transcurrido</h2>
+  <div class="grafo plano" id="curva" aria-label="Proporción de dictámenes decididos según los días transcurridos"></div>
+  <p class="leyenda"><span class="l-linea l-filtrado"></span>los dictámenes elegidos
+    <span class="l-linea l-todos"></span>todos. Cuenta también los casos que siguen esperando: un caso abierto hace
+    300 días cuenta como no decidido hasta los 300 días y no se usa después (estimador de Kaplan–Meier). La mediana es
+    el día en que la curva cruza el 50 %.</p>
+  <h3 class="h3">Por año del dictamen</h3>
+  <div class="tabla-ancha"><table class="lista" id="por-anio">
+    <thead><tr><th>Año</th><th class="num">Dictámenes</th><th class="num">Decididos</th><th class="num">Esperando</th>
+      <th class="num">Mediana (días)</th><th class="num">Decididos al año</th><th class="num">A los dos años</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+</section>
+
+<section>
+  <h2>Los casos <span class="n" id="cuenta">Cargando…</span></h2>
+  <div class="fila-orden"><label class="leyenda">Orden <select id="orden">
+    <option value="recientes">dictamen más reciente</option>
+    <option value="antiguos">dictamen más antiguo</option>
+    <option value="mas">mayor demora</option>
+    <option value="menos">menor demora</option>
+  </select></label>
+  <span class="leyenda eje-casos" id="eje-casos"></span></div>
+  <ol class="casos" id="casos"></ol>
+  <p><button type="button" class="mas" id="mas" hidden>Mostrar más</button></p>
+</section>
+
+{{ $c := $p.cuantos }}
+<section class="texto-largo" id="categorias">
+  <h2>Las categorías</h2>
+  <p>Los filtros de arriba agrupan los dictámenes de varias maneras. Al lado de cada grupo, cuántos dictámenes tiene y
+    cuántos de ellos siguen esperando una decisión.</p>
+
+  <h3 class="h3">Asunto: de qué trata el dictamen</h3>
+  <p>Sale de la primera voz con que la Procuración clasifica su dictamen.</p>
+  <dl class="categorias">
+    {{ range slice
+      (slice "Competencia" "Competencia" "Dos tribunales se atribuyen el mismo caso, o ninguno lo quiere, y la Corte decide cuál debe tramitarlo. Incluye las dudas sobre si un caso corresponde a la competencia originaria de la propia Corte. Son cuestiones de trámite: más de la mitad de los dictámenes, y en general se deciden rápido.")
+      (slice "Queja" "Queja" "El tribunal anterior rechazó el recurso extraordinario y la parte se presentó directamente ante la Corte (recurso de queja o «de hecho») para que lo abra igual.")
+      (slice "Recurso extraordinario" "Recurso extraordinario" "El tribunal anterior concedió el recurso extraordinario y el caso llegó a la Corte por esa vía: la cuestión federal de fondo está planteada.")
+      (slice "Acción ante la Corte" "Acción ante la Corte" "Juicios que empiezan y terminan en la Corte, por su competencia originaria: por ejemplo, demandas contra una provincia.")
+      (slice "Otros" "Otros" "La primera voz no nombra ninguna de esas vías, sino directamente el tema del caso.") }}
+    {{ $n := index $c.asunto (index . 0) }}
+    <dt>{{ index . 1 }}{{ with $n }} <span class="n">{{ .n | lang.FormatNumber 0 }} · {{ .esperando | lang.FormatNumber 0 }} esperando</span>{{ end }}</dt>
+    <dd>{{ index . 2 }}</dd>
+    {{ end }}
+  </dl>
+
+  <h3 class="h3">Estado</h3>
+  <dl class="categorias">
+    <dt>Decididos <span class="n">{{ $p.decididos | lang.FormatNumber 0 }}</span></dt>
+    <dd>Encontramos una decisión de la Corte en el mismo expediente, con fecha igual o posterior al dictamen.</dd>
+    <dt>Esperando decisión <span class="n">{{ $p.esperando | lang.FormatNumber 0 }}</span></dt>
+    <dd>No encontramos esa decisión. Puede que el caso siga pendiente, o que la Corte lo haya decidido bajo un número que
+      no reconocemos: ver «Por qué espera».</dd>
+    <dt>Sin expediente <span class="n">{{ $p.sin_expediente | lang.FormatNumber 0 }}</span></dt>
+    <dd>El dictamen no indica el número del caso, así que no se pudo buscar su decisión.</dd>
+  </dl>
+
+  <h3 class="h3">Por qué espera</h3>
+  <p>Cada dictamen sin decisión encontrada lleva la razón más probable. Las razones sirven para revisar los pendientes
+    por grupo: en algunos la espera es real, en otros es más probable que nos falte el vínculo con la decisión.</p>
+  <dl class="categorias">
+    {{ range slice
+      (slice "reciente" "Dictamen de menos de un año" "Es la espera normal: el dictamen tiene menos de un año al último día de nuestros datos.")
+      (slice "mantenimiento" "La PGN mantiene el recurso de un fiscal" "Un fiscal de instancia anterior recurrió y la Procuración, en vez de opinar sobre el fondo, «mantiene» su recurso ante la Corte. Muchos de 2019, en causas penales tributarias.")
+      (slice "competencia_originaria" "Competencia originaria de la Corte" "Una cuestión de competencia en un caso que empezó en la propia Corte (numerado por ella). La Corte suele resolverla en el mismo expediente, pero a veces lo decide con otro número o junto a otro caso.")
+      (slice "competencia" "Cuestión de competencia" "Una cuestión de competencia en un caso que viene de otro tribunal. Si la Corte la resolvió bajo el número de otro de los tribunales en conflicto, no la encontramos.")
+      (slice "solo_anteriores" "La Corte decidió solo antes del dictamen" "Hay decisiones de la Corte en el expediente, pero todas anteriores al dictamen: el caso volvió a la Corte y la decisión posterior falta.")
+      (slice "sin_rastro" "Ninguna decisión de la Corte nombra el caso" "No hay ninguna decisión en el expediente ni que lo mencione. Es el grupo más incierto: puede seguir pendiente o haberse decidido bajo otro número.") }}
+    {{ $n := index $c.motivo (index . 0) }}
+    <dt>{{ index . 1 }}{{ with $n }} <span class="n">{{ .n | lang.FormatNumber 0 }}</span>{{ end }}</dt>
+    <dd>{{ index . 2 }}</dd>
+    {{ end }}
+  </dl>
+
+  <h3 class="h3">La Corte remite</h3>
+  <p>Solo para los decididos: si la decisión de la Corte se apoya en el dictamen o en sus precedentes, según la base de
+    la Corte.</p>
+  <dl class="categorias">
+    {{ range slice
+      (slice "TOTAL AL DICTAMEN PGN" "Al dictamen, totalmente" "La Corte decide «por los fundamentos y conclusiones» del dictamen: lo hace suyo.")
+      (slice "PARCIAL AL DICTAMEN PGN" "Al dictamen, en parte" "La Corte adopta solo una parte del dictamen y da sus propias razones para el resto.")
+      (slice "PRECEDENTES CSJN" "A sus precedentes" "La Corte decide remitiendo a sus fallos anteriores sobre la misma cuestión.") }}
+    {{ $n := index $c.remision (index . 0) }}
+    <dt>{{ index . 1 }}{{ with $n }} <span class="n">{{ .n | lang.FormatNumber 0 }}</span>{{ end }}</dt>
+    <dd>{{ index . 2 }}</dd>
+    {{ end }}
+  </dl>
+  <p>Las demás decisiones no remiten, o la base de la Corte no lo indica.</p>
+
+  <h3 class="h3">Los demás filtros</h3>
+  <dl class="categorias">
+    <dt>Tribunal de origen</dt>
+    <dd>La sigla con que empieza el número del expediente: el tribunal donde se numeró el caso (CIV, CAF, CNT…). «CSJ»
+      es un caso numerado por la propia Corte: las competencias, quejas y acciones que empiezan en ella. Una sola letra
+      es la numeración anterior de la Corte, con la inicial de la carátula.</dd>
+    <dt>Firma</dt>
+    <dd>Quién firmó el dictamen por la Procuración: la Procuradora o el Procurador General, o un procurador fiscal ante
+      la Corte.</dd>
+    <dt>Resultado</dt>
+    <dd>Qué resolvió la Corte en la decisión que le siguió al dictamen, tal como lo registra su base (rechaza, revoca,
+      declara la competencia…).</dd>
+  </dl>
+</section>
+
+<section class="texto-largo">
+  <h2>Cómo leer estos datos</h2>
+  <ul>
+    <li><strong>De dónde vienen.</strong> Los dictámenes, del sitio del Ministerio Público Fiscal; las decisiones, de
+      sjconsulta. Se unen por el expediente (tribunal, número y año), o porque el texto de una decisión conjunta nombra
+      el caso. Se toma la primera decisión de la Corte en el expediente con fecha igual o posterior al dictamen.</li>
+    <li><strong>La primera decisión no siempre es la final.</strong> Puede ser un paso intermedio. El filtro
+      «Resultado» permite quedarse con un tipo de decisión.</li>
+    <li><strong>«Esperando» quiere decir que no encontramos la decisión.</strong> Si la Corte decidió un caso bajo un
+      número que no reconocemos (por ejemplo, unido a otro expediente), cuenta como pendiente y su demora sale más
+      larga. Las demoras son, si acaso, cotas superiores. Cuando el número que da la Procuración tiene otro tribunal,
+      otro año o otro tomo que el de la Corte, se acepta la decisión con ese número solo si las partes de la carátula
+      coinciden. También se une un dictamen a la decisión que lleva entre sus documentos la copia de ese mismo
+      dictamen (el mismo archivo o el mismo texto que publica la Procuración).</li>
+    <li><strong>Los años recientes están incompletos.</strong> Un dictamen de 2026 no pudo esperar más de unos meses.</li>
+  </ul>
+  <p>Datos completos: <a href="{{ $p.csv | relURL }}" download>dictamenes.csv</a> (una fila por dictamen, con
+    enlaces al dictamen y a la decisión).</p>
+</section>
+{{ end }}
+{{ define "scripts" }}<script src="{{ "js/d3.min.js" | relURL }}?v={{ now.Format "20060102150405" }}"></script><script src="{{ "js/dictamenes.js" | relURL }}?v={{ now.Format "20060102150405" }}"></script>{{ end }}

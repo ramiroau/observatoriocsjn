@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {{ $titulo := cond .IsHome (printf "%s · Dictámenes y decisiones" site.Title) (printf "%s · %s" .Title site.Title) }}
+  <title>{{ $titulo }}</title>
+  <meta name="description" content="{{ site.Params.descripcion }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ $titulo }}">
+  <meta property="og:description" content="{{ site.Params.descripcion }}">
+  <meta property="og:url" content="{{ .Permalink }}">
+  <meta property="og:locale" content="es_AR">
+  <meta name="twitter:card" content="summary">
+  <link rel="stylesheet" href="{{ "css/sitio.css" | relURL }}?v={{ now.Format "20060102150405" }}">
+</head>
+<body>
+  <header class="cabecera">
+    <div class="ancho">
+      <a class="marca" href="{{ site.Home.RelPermalink }}">Observatorio <span>CSJN</span></a>
+      <nav>
+        <a href="{{ site.Home.RelPermalink }}">Dictámenes</a>
+        <a href="{{ "acerca/" | relURL }}">Acerca</a>
+      </nav>
+    </div>
+  </header>
+  <main class="ancho">
+    {{ block "main" . }}{{ end }}
+  </main>
+  <footer class="pie">
+    <div class="ancho">Datos: Ministerio Público Fiscal de la Nación (dictámenes) y Corte Suprema de Justicia de la
+      Nación (sjconsulta). Actualizados al {{ with site.Home.Params.hasta }}{{ time.Format "2/1/2006" . }}{{ end }}.</div>
+  </footer>
+  {{ block "scripts" . }}{{ end }}
+</body>
+</html>
