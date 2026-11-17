@@ -37,7 +37,7 @@
       r.anio = +r.fecha_dictamen.slice(0, 4);
       r.decidido = r.esperando !== 1 && r.esperando !== 2;  // null: decided, with no date
       r.sinExpediente = r.esperando === 2;
-      r.buscar = norm([r.caratula, r.expediente, r.expediente_decision, r.voz].join(" "));
+      r.buscar = norm([r.caratula, r.expediente, r.expediente_decision, r.voz, r.fallos && "fallos " + r.fallos].join(" "));
       return r;
     });
   }
@@ -56,12 +56,12 @@
   // ---- filter
   function filtrar() {
     const desde = parseInt($("desde").value, 10), hasta = parseInt($("hasta").value, 10);
-    const q = norm($("texto").value.trim()), estado = $("estado").value;
+    const q = norm($("texto").value).split(/\s+/).filter(Boolean), estado = $("estado").value;
     const sel = ["asunto", "camara", "firma", "sentido", "remision", "motivo"].map(id => [id, $(id).value]).filter(x => x[1] !== "");
     elegidos = todos.filter(r =>
       (isNaN(desde) || r.anio >= desde) && (isNaN(hasta) || r.anio <= hasta) &&
       (!estado || (estado === "decidido" ? r.decidido : estado === "sin" ? r.sinExpediente : r.esperando === 1)) &&
-      sel.every(([k, v]) => String(r[k]) === v) && (!q || r.buscar.includes(q)));
+      sel.every(([k, v]) => String(r[k]) === v) && q.every(w => r.buscar.includes(w)));
   }
 
   // ---- Kaplan–Meier: the share decided by each day since the dictamen, counting the open cases
@@ -375,5 +375,10 @@
     opciones("remision", d.remisions, s => s.toLowerCase().replace("pgn", "PGN"));
     if (d.motivos) opciones("motivo", d.motivos, m => MOTIVOS[m] || m);
     eje(); pintar();
+    // for a search box elsewhere on the page (the public site's header): the rows, and a way to open one case
+    caja.dictamenes = { filas: todos, D, fecha, abrir(r) {
+      fijado = r; detalle(); marcar(r); $("detalle").scrollIntoView({ behavior: "smooth", block: "center" });
+    } };
+    caja.dispatchEvent(new Event("cargados"));
   }).catch(e => { $("cuenta").textContent = "No se pudieron cargar los datos."; console.error(e); });
 })();

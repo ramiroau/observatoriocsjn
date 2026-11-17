@@ -22,6 +22,13 @@
         <a href="{{ site.Home.RelPermalink }}">Dictámenes</a>
         <a href="{{ "acerca/" | relURL }}">Acerca</a>
       </nav>
+      {{ if .IsHome }}
+      <form class="busca" role="search" autocomplete="off">
+        <input type="search" placeholder="Buscar por carátula, expediente o voz" aria-label="Buscar dictámenes"
+               aria-controls="sugerencias" aria-expanded="false" aria-autocomplete="list">
+        <div class="sugerencias" id="sugerencias" role="listbox" hidden></div>
+      </form>
+      {{ end }}
     </div>
   </header>
   <main class="ancho">
