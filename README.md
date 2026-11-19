@@ -42,9 +42,10 @@ carátula y la cámara de origen.
      legajo de apelación o casación;
    - la causa viene de la Cámara en lo Penal Económico (CPE).
 3. **Mantenimiento, otros.** El resto de los «mantenimiento del recurso».
-4. **Series del mismo día.** Cinco o más dictámenes firmados el mismo día con las mismas tres primeras voces. Por
-   ejemplo, 335 dictámenes de 2026 sobre el aumento de cuotas de prepagas y obras sociales por decreto de necesidad y
-   urgencia.
+4. **Parte de una serie.** El dictamen pertenece a una serie y no es su caso testigo (ver «Series y casos
+   testigo»). Una serie son cinco o más dictámenes firmados el mismo día con las mismas tres primeras voces. Por
+   ejemplo, los dictámenes de 2026 sobre el aumento de cuotas de prepagas y obras sociales por decreto de necesidad y
+   urgencia. El testigo que sigue esperando pasa a los grupos siguientes.
 5. **Trámite menor.** Las voces son medidas para mejor proveer, cuestión abstracta, inoficiosidad, desistimiento,
    caducidad, recusación o excusación, o beneficio de litigar sin gastos. También cuando la única voz es
    «recurso extraordinario».
@@ -59,23 +60,35 @@ carátula y la cámara de origen.
 | Competencia | 1.796 | 808 | 988 |
 | Mantenimiento, penal tributario | 748 | 13 | 735 |
 | Mantenimiento, otros | 566 | 110 | 456 |
-| Series del mismo día | 568 | 452 | 116 |
-| Trámite menor | 324 | 120 | 204 |
+| Parte de una serie | 588 | 430 | 158 |
+| Trámite menor | 308 | 119 | 189 |
 | Penal, otros | 74 | 44 | 30 |
-| Resto | 999 | 330 | 669 |
+| Resto | 995 | 353 | 642 |
 | **Total** | **5.075** | **1.877** | **3.198** |
 
-- **Inflación: 4.002 dictámenes** (79 %), los grupos 1 a 5.
+- **Inflación: 4.006 dictámenes** (79 %), los grupos 1 a 5.
   - Las series no son paja del todo, pero basta con seguir un caso por serie: su caso testigo (ver abajo).
 - **Dudosos: 74 dictámenes**, el grupo «Penal, otros». Pueden ser casos de fondo, pero la regla sólo mira la
   carátula.
-- **Casos de fondo sin decisión: 999.**
-  - 330 se firmaron hace menos de un año, una espera normal.
-  - **669 llevan más de un año.** Son los candidatos a revisar a mano en el PJN.
-  - Por motivo: 455 sin rastro en la base de decisiones; 128 con decisiones anteriores al dictamen, pero ninguna
-    posterior; 86 con alguna voz de competencia que no es la primera.
-  - Por año de firma: 2015, 26; 2016, 26; 2017, 46; 2018, 26; 2019, 31; 2020, 23; 2021, 47; 2022, 46; 2023, 94;
-    2024, 149; 2025, 155.
+- **Casos de fondo sin decisión (el trigo): 995.**
+  - 353 se firmaron hace menos de un año, una espera normal.
+  - **642 llevan más de un año.** Son los candidatos a revisar a mano en el PJN.
+  - Por motivo: 440 sin rastro en la base de decisiones; 126 con decisiones anteriores al dictamen, pero ninguna
+    posterior; 76 con alguna voz de competencia que no es la primera.
+  - Por año de firma: 2015, 17; 2016, 25; 2017, 42; 2018, 23; 2019, 32; 2020, 20; 2021, 49; 2022, 47; 2023, 93;
+    2024, 142; 2025, 152.
+
+**En el sitio**, debajo de los filtros hay cuatro botones:
+
+- bajo el título «Todos los dictámenes (2015–2026)», **Todos**;
+- bajo «Pendientes (2015–2026)», tres más:
+  - **Todos**, en ocre: los 5.075 dictámenes sin decisión encontrada;
+  - **Casos identificados como relevantes**, en dorado: el grupo «Resto»;
+  - **Casos identificados como no relevantes**, en gris: los grupos 1 a 5.
+
+Los dudosos sólo aparecen con «Todos». Cada dictamen que espera lleva una etiqueta con su grupo, y al final de la
+página, en «Casos relevantes y no relevantes», están las reglas con sus cifras. En los CSV, el grupo va en la columna `grupo`
+(`pgn.grupo` en `observatorio-csjn`).
 
 ### Series y casos testigo
 
@@ -121,5 +134,5 @@ el 07/10 y 13 el 15/10.
   una muestra de cada grupo.
 - **«Paja» no quiere decir «decidido».** Quiere decir que no es un caso de fondo cuya espera interese medir.
   Algunos de esos expedientes pueden seguir abiertos.
-- **De esta clasificación, sólo las series están en el sitio y en los CSV.** Los demás grupos no: ahí cada dictamen
-  tiene su motivo («Por qué espera»).
+- **El grupo y el motivo son cosas distintas.** El grupo dice si el dictamen es trigo o paja; el motivo («Por qué
+  espera») dice por qué creemos que sigue sin decisión. Los dos están en el sitio y en los CSV.

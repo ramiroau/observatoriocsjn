@@ -73,6 +73,36 @@
     "n": 468,
     "esperando": 0
    }
+  },
+  "grupo": {
+   "resto": {
+    "n": 995,
+    "esperando": 995
+   },
+   "serie": {
+    "n": 588,
+    "esperando": 588
+   },
+   "competencia": {
+    "n": 1796,
+    "esperando": 1796
+   },
+   "tramite_menor": {
+    "n": 308,
+    "esperando": 308
+   },
+   "mantenimiento_otro": {
+    "n": 566,
+    "esperando": 566
+   },
+   "mantenimiento_penal_tributario": {
+    "n": 748,
+    "esperando": 748
+   },
+   "penal_otro": {
+    "n": 74,
+    "esperando": 74
+   }
   }
  },
  "datos": "data/dictamenes.json",

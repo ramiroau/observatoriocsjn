@@ -25,6 +25,20 @@
   };
   let D, todos = [], elegidos = [], mostrar = PASO, fijado = null, kmTodos;
   let serieElegida = null;  // a series picked from a case: only its dictámenes
+  // "pendientes": every case still waiting; "trigo": only those identified as relevant; "paja": the others (pgn.grupo)
+  let criba = "";
+  const PAJA = ["competencia", "mantenimiento_penal_tributario", "mantenimiento_otro", "serie", "tramite_menor"];
+  const GRUPOS = {
+    competencia: "no relevante: cuestión de competencia",
+    mantenimiento_penal_tributario: "no relevante: la PGN mantiene el recurso de un fiscal (penal tributario)",
+    mantenimiento_otro: "no relevante: la PGN mantiene el recurso de un fiscal",
+    serie: "no relevante: lo representa el caso testigo de su serie",
+    tramite_menor: "no relevante: trámite menor",
+    penal_otro: "dudoso: penal",
+    resto: "caso identificado como relevante"
+  };
+  const clase = r => r.grupo == null ? null : D.grupos[r.grupo] === "resto" ? "trigo"
+                   : PAJA.includes(D.grupos[r.grupo]) ? "paja" : "dudoso";
 
   const color = nombre => getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
 
@@ -62,7 +76,7 @@
     const modo = $("serie").value;
     const enSerie = r => (serieElegida == null || r.serie === serieElegida) && (!modo ||
       (modo === "una" ? r.serie == null || r.testigo === 1 : modo === "en" ? r.serie != null : r.serie == null));
-    elegidos = todos.filter(r => enSerie(r) &&
+    elegidos = todos.filter(r => enSerie(r) && (!criba || (criba === "pendientes" ? r.esperando === 1 : clase(r) === criba)) &&
       (isNaN(desde) || r.anio >= desde) && (isNaN(hasta) || r.anio <= hasta) &&
       (!estado || (estado === "decidido" ? r.decidido : estado === "sin" ? r.sinExpediente : r.esperando === 1)) &&
       sel.every(([k, v]) => String(r[k]) === v) && q.every(w => r.buscar.includes(w)));
@@ -323,6 +337,11 @@
                                             : "sin decisión encontrada" + (r.motivo != null
                                               ? " (" + MOTIVOS[D.motivos[r.motivo]] + ")" : "")));
     if (r.voz) items.push(parte(r.voz));
+    if (r.grupo != null) {
+      const g = document.createElement("span"); g.className = "etiqueta " + clase(r);
+      g.textContent = GRUPOS[D.grupos[r.grupo]] || D.grupos[r.grupo];
+      items.push(g);
+    }
     if (r.serie != null) {  // [id, date, voces, dictámenes, waiting, the testigo's row]
       const S = D.series[r.serie];
       items.push(boton("serie de " + fmt(S[3]) + " dictámenes del " + fecha(S[1]), () => elegirSerie(r.serie)));
@@ -400,9 +419,17 @@
   }));
   $("limpiar").addEventListener("click", () => {
     caja.querySelectorAll("input, select").forEach(c => { c.value = ""; });
+    criba = "";
+    document.querySelectorAll("#cribas .criba").forEach(b => b.setAttribute("aria-pressed", b.dataset.criba === ""));
     elegirSerie(null);
   });
   $("mas").addEventListener("click", () => { mostrar += PASO; lista(); });
+  function cribar(c) {
+    criba = c;
+    document.querySelectorAll("#cribas .criba").forEach(b => b.setAttribute("aria-pressed", b.dataset.criba === c));
+    otra();
+  }
+  document.querySelectorAll("#cribas .criba").forEach(b => b.addEventListener("click", () => cribar(b.dataset.criba)));
   let espera;
   new ResizeObserver(() => { clearTimeout(espera); espera = setTimeout(() => D && pintar(), 150); }).observe(disp.el);
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => D && pintar());
@@ -415,6 +442,8 @@
     opciones("sentido", d.sentidos, s => s.toLowerCase());
     opciones("remision", d.remisions, s => s.toLowerCase().replace("pgn", "PGN"));
     if (d.motivos) opciones("motivo", d.motivos, m => MOTIVOS[m] || m);
+    const cuenta = c => fmt(todos.filter(r => c === "pendientes" ? r.esperando === 1 : clase(r) === c).length);
+    document.querySelectorAll("#cribas .criba[data-criba] .n").forEach(n => { n.textContent = cuenta(n.parentNode.dataset.criba); });
     eje(); pintar();
     // for a search box elsewhere on the page (the public site's header): the rows, and a way to open one case
     caja.dictamenes = { filas: todos, D, fecha, abrir };

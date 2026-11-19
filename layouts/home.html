@@ -12,7 +12,7 @@
   dar vista a la Procuración no aparecen aquí. Qué significa cada categoría, al final de la página
   (<a href="#categorias">Las categorías</a>).</p>
 
-<section class="filtros" id="filtros" data-src="{{ $p.datos | relURL }}">
+<section class="filtros" id="filtros" data-src="{{ $p.datos | relURL }}?v={{ now.Format "20060102150405" }}">
   <div class="fila">
     <label>Dictamen desde <input type="number" id="desde" inputmode="numeric" placeholder="2015" min="2015" max="2026"></label>
     <label>hasta <input type="number" id="hasta" inputmode="numeric" placeholder="2026" min="2015" max="2026"></label>
@@ -52,6 +52,23 @@
     <button type="button" class="mas" id="limpiar">Quitar los filtros</button>
   </div>
 </section>
+
+<div class="cribas" id="cribas" role="group" aria-label="Elegir entre todos los dictámenes y los pendientes">
+  <div class="criba-grupo">
+    <span class="criba-titulo">Todos los dictámenes (2015–{{ substr $p.hasta 0 4 }})</span>
+    <button type="button" class="criba" data-criba="" aria-pressed="true">Todos</button>
+  </div>
+  <div class="criba-grupo">
+    <span class="criba-titulo">Pendientes (2015–{{ substr $p.hasta 0 4 }})</span>
+    <button type="button" class="criba pendientes" data-criba="pendientes" aria-pressed="false"><span
+      class="muestra"></span>Todos <span class="n"></span></button>
+    <button type="button" class="criba trigo" data-criba="trigo" aria-pressed="false"><span class="muestra"></span>Casos
+      identificados como relevantes <span class="n"></span></button>
+    <button type="button" class="criba paja" data-criba="paja" aria-pressed="false"><span class="muestra"></span>Casos
+      identificados como no relevantes <span class="n"></span></button>
+    <a class="que-es" href="#relevantes">¿Qué es cada uno?</a>
+  </div>
+</div>
 
 <div class="cifras" id="cifras" aria-live="polite"></div>
 
@@ -137,6 +154,27 @@
       (slice "solo_anteriores" "La Corte decidió solo antes del dictamen" "Hay decisiones de la Corte en el expediente, pero todas anteriores al dictamen: el caso volvió a la Corte y la decisión posterior falta.")
       (slice "sin_rastro" "Ninguna decisión de la Corte nombra el caso" "No hay ninguna decisión en el expediente ni que lo mencione. Es el grupo más incierto: puede seguir pendiente o haberse decidido bajo otro número.") }}
     {{ $n := index $c.motivo (index . 0) }}
+    <dt>{{ index . 1 }}{{ with $n }} <span class="n">{{ .n | lang.FormatNumber 0 }}</span>{{ end }}</dt>
+    <dd>{{ index . 2 }}</dd>
+    {{ end }}
+  </dl>
+
+  <h3 class="h3" id="relevantes">Casos relevantes y no relevantes</h3>
+  <p>La mayoría de los dictámenes que esperan no son casos de fondo que la Corte tenga sin resolver. Cada dictamen sin
+    decisión encontrada va al primer grupo cuya regla cumple, en este orden. Los cinco primeros son casos
+    <strong>identificados como no relevantes</strong>, el sexto es dudoso y el resto son los casos <strong>identificados
+    como relevantes</strong>. Las reglas miran las voces del
+    dictamen, la carátula y el tribunal de origen; no se controlaron a mano.</p>
+  <dl class="categorias">
+    {{ range slice
+      (slice "competencia" "No relevante · Competencia" "La primera voz es «competencia» o «inhibitoria»: contiendas entre tribunales y competencia originaria de la Corte.")
+      (slice "mantenimiento_penal_tributario" "No relevante · Mantenimiento, penal tributario" "La Procuración mantiene la queja de un fiscal en una causa penal tributaria, aduanera o de la Cámara en lo Penal Económico.")
+      (slice "mantenimiento_otro" "No relevante · Mantenimiento, otros" "La Procuración mantiene el recurso de un fiscal en otra materia.")
+      (slice "serie" "No relevante · Parte de una serie" "Pertenece a una serie y no es su caso testigo: lo representa el testigo.")
+      (slice "tramite_menor" "No relevante · Trámite menor" "Medidas para mejor proveer, cuestión abstracta, desistimiento, caducidad, recusación, beneficio de litigar sin gastos y similares.")
+      (slice "penal_otro" "Dudoso · Penal" "La carátula habla de imputados, incidentes, legajos, excarcelación o estupefacientes: puede ser un caso de fondo.")
+      (slice "resto" "Relevante · El resto" "Los demás: casos de fondo sin decisión encontrada, incluidos los testigos de las series que siguen esperando. Los de menos de un año esperan lo normal.") }}
+    {{ $n := index $c.grupo (index . 0) }}
     <dt>{{ index . 1 }}{{ with $n }} <span class="n">{{ .n | lang.FormatNumber 0 }}</span>{{ end }}</dt>
     <dd>{{ index . 2 }}</dd>
     {{ end }}
