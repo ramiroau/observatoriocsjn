@@ -24,6 +24,7 @@
     sin_rastro: "ninguna decisión de la Corte nombra el caso"
   };
   let D, todos = [], elegidos = [], mostrar = PASO, fijado = null, kmTodos;
+  let serieElegida = null;  // a series picked from a case: only its dictámenes
 
   const color = nombre => getComputedStyle(document.documentElement).getPropertyValue(nombre).trim();
 
@@ -58,7 +59,10 @@
     const desde = parseInt($("desde").value, 10), hasta = parseInt($("hasta").value, 10);
     const q = norm($("texto").value).split(/\s+/).filter(Boolean), estado = $("estado").value;
     const sel = ["asunto", "camara", "firma", "sentido", "remision", "motivo"].map(id => [id, $(id).value]).filter(x => x[1] !== "");
-    elegidos = todos.filter(r =>
+    const modo = $("serie").value;
+    const enSerie = r => (serieElegida == null || r.serie === serieElegida) && (!modo ||
+      (modo === "una" ? r.serie == null || r.testigo === 1 : modo === "en" ? r.serie != null : r.serie == null));
+    elegidos = todos.filter(r => enSerie(r) &&
       (isNaN(desde) || r.anio >= desde) && (isNaN(hasta) || r.anio <= hasta) &&
       (!estado || (estado === "decidido" ? r.decidido : estado === "sin" ? r.sinExpediente : r.esperando === 1)) &&
       sel.every(([k, v]) => String(r[k]) === v) && q.every(w => r.buscar.includes(w)));
@@ -319,9 +323,46 @@
                                             : "sin decisión encontrada" + (r.motivo != null
                                               ? " (" + MOTIVOS[D.motivos[r.motivo]] + ")" : "")));
     if (r.voz) items.push(parte(r.voz));
+    if (r.serie != null) {  // [id, date, voces, dictámenes, waiting, the testigo's row]
+      const S = D.series[r.serie];
+      items.push(boton("serie de " + fmt(S[3]) + " dictámenes del " + fecha(S[1]), () => elegirSerie(r.serie)));
+      if (r.testigo === 1) {
+        const b = document.createElement("strong"); b.className = "testigo"; b.textContent = "caso testigo de la serie";
+        items.push(b);
+      } else {
+        const t = todos[S[5]];
+        items.push(boton("caso testigo: " + (t.expediente || t.caratula), () => abrir(t)));
+      }
+    }
     items.forEach((s, i) => { if (i) datos.append(" · "); datos.append(s); });
     li.append(cab, pista, datos);
     return li;
+  }
+
+  function boton(txt, accion) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "ir"; b.textContent = txt;
+    b.addEventListener("click", accion);
+    return b;
+  }
+
+  function abrir(r) {
+    fijado = r; detalle(); marcar(r); $("detalle").scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function elegirSerie(i) {
+    serieElegida = i;
+    const el = $("serie-elegida");
+    el.hidden = i == null;
+    if (i != null) {
+      const S = D.series[i];
+      const t = document.createElement("span");
+      t.textContent = "Serie del " + fecha(S[1]) + ": " + S[2] + " · " + fmt(S[3]) + " dictámenes, " +
+        fmt(S[4]) + " esperando · ";
+      el.replaceChildren(t, boton("ver el caso testigo", () => abrir(todos[S[5]])), " ",
+                         boton("quitar la serie", () => elegirSerie(null)));
+      caja.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    otra();
   }
 
   function lista() {
@@ -351,7 +392,7 @@
   }
 
   const otra = () => { mostrar = PASO; fijado = null; detalle(); pintar(); };
-  ["desde", "hasta", "texto", "estado", "asunto", "camara", "firma", "sentido", "remision", "motivo"]
+  ["desde", "hasta", "texto", "estado", "asunto", "camara", "firma", "sentido", "remision", "motivo", "serie"]
     .forEach(id => $(id).addEventListener("input", otra));
   $("orden").addEventListener("input", () => { mostrar = PASO; lista(); });
   caja.querySelectorAll(".rapidos button").forEach(b => b.addEventListener("click", () => {
@@ -359,7 +400,7 @@
   }));
   $("limpiar").addEventListener("click", () => {
     caja.querySelectorAll("input, select").forEach(c => { c.value = ""; });
-    otra();
+    elegirSerie(null);
   });
   $("mas").addEventListener("click", () => { mostrar += PASO; lista(); });
   let espera;
@@ -376,9 +417,7 @@
     if (d.motivos) opciones("motivo", d.motivos, m => MOTIVOS[m] || m);
     eje(); pintar();
     // for a search box elsewhere on the page (the public site's header): the rows, and a way to open one case
-    caja.dictamenes = { filas: todos, D, fecha, abrir(r) {
-      fijado = r; detalle(); marcar(r); $("detalle").scrollIntoView({ behavior: "smooth", block: "center" });
-    } };
+    caja.dictamenes = { filas: todos, D, fecha, abrir };
     caja.dispatchEvent(new Event("cargados"));
   }).catch(e => { $("cuenta").textContent = "No se pudieron cargar los datos."; console.error(e); });
 })();

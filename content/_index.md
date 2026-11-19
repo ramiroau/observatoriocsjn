@@ -5,6 +5,12 @@
  "esperando": 5075,
  "decididos": 25704,
  "sin_expediente": 1,
+ "series": {
+  "n": 585,
+  "dictamenes": 7543,
+  "esperando": 1995,
+  "testigos_esperando": 61
+ },
  "cuantos": {
   "asunto": {
    "Otros": {

@@ -227,6 +227,10 @@ h3.grupo-citas { font: 600 .95rem var(--sans); color: var(--tenue); margin: 1rem
 .tramo::before { content: ""; position: absolute; left: -3px; top: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--decidido); }
 .caso.abierto .tramo::before { background: var(--esperando); }
 .caso-datos { color: var(--tenue); font-size: .85rem; overflow-wrap: anywhere; }
+.caso-datos button.ir, .serie-elegida button.ir { font: inherit; color: var(--cita); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.caso-datos .testigo { color: var(--tinta); font-weight: 600; }
+.serie-elegida { font-size: .9rem; padding: .5rem .75rem; border: 1px solid var(--acento); border-radius: 6px; display: block; }
+.serie-elegida[hidden] { display: none; }
 .filtros label { max-width: 100%; }
 .filtros select { max-width: 100%; min-width: 0; }
 

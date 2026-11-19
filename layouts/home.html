@@ -39,7 +39,14 @@
     <label>Firma <select id="firma"><option value="">todas</option></select></label>
     <label>Resultado <select id="sentido"><option value="">todos</option></select></label>
     <label>La Corte remite <select id="remision"><option value="">—</option></select></label>
+    <label>Series <select id="serie">
+      <option value="">todos</option>
+      <option value="una">un caso por serie</option>
+      <option value="en">solo los de una serie</option>
+      <option value="fuera">fuera de las series</option>
+    </select></label>
   </div>
+  <div class="fila serie-elegida" id="serie-elegida" hidden></div>
   <div class="fila">
     <input class="filtro" type="search" id="texto" placeholder="Carátula, expediente o voz" aria-label="Buscar por carátula, expediente o voz">
     <button type="button" class="mas" id="limpiar">Quitar los filtros</button>
@@ -134,6 +141,20 @@
     <dd>{{ index . 2 }}</dd>
     {{ end }}
   </dl>
+
+  <h3 class="h3">Series</h3>
+  {{ with $p.series }}
+  <p>Una serie son cinco o más dictámenes firmados el mismo día con las mismas tres primeras voces: la Procuración
+    contesta de una vez muchos casos iguales, como los amparos contra el aumento de cuotas de prepagas y obras sociales
+    por decreto, o las quejas de fiscales que mantiene en bloque. Hay {{ .n | lang.FormatNumber 0 }} series, con
+    {{ .dictamenes | lang.FormatNumber 0 }} dictámenes; {{ .esperando | lang.FormatNumber 0 }} de ellos siguen sin
+    decisión encontrada.</p>
+  <p>De cada serie se toma un <strong>caso testigo</strong>: el primero que la Corte decidió o, si no decidió ninguno,
+    el de número de expediente más antiguo. Lo que la Corte resuelve en el testigo es, casi siempre, lo que resuelve
+    en los demás, así que para seguir una serie basta con seguirlo a él. Solo {{ .testigos_esperando | lang.FormatNumber 0 }}
+    testigos siguen esperando. Con el filtro «un caso por serie» cada serie cuenta una vez; cada caso de una serie la
+    nombra y lleva a su testigo.</p>
+  {{ end }}
 
   <h3 class="h3">La Corte remite</h3>
   <p>Solo para los decididos: si la decisión de la Corte se apoya en el dictamen o en sus precedentes, según la base de
