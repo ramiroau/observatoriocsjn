@@ -368,8 +368,9 @@
     fijado = r; detalle(); marcar(r); $("detalle").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
-  function elegirSerie(i) {
+  function elegirSerie(i, desplazar = true) {
     serieElegida = i;
+    $("serie-lista").value = i == null ? "" : i;
     const el = $("serie-elegida");
     el.hidden = i == null;
     if (i != null) {
@@ -379,7 +380,7 @@
         fmt(S[4]) + " esperando · ";
       el.replaceChildren(t, boton("ver el caso testigo", () => abrir(todos[S[5]])), " ",
                          boton("quitar la serie", () => elegirSerie(null)));
-      caja.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (desplazar) caja.scrollIntoView({ behavior: "smooth", block: "start" });
     }
     otra();
   }
@@ -423,6 +424,7 @@
     document.querySelectorAll("#cribas .criba").forEach(b => b.setAttribute("aria-pressed", b.dataset.criba === ""));
     elegirSerie(null);
   });
+  $("serie-lista").addEventListener("input", e => elegirSerie(e.target.value === "" ? null : +e.target.value, false));
   $("mas").addEventListener("click", () => { mostrar += PASO; lista(); });
   function cribar(c) {
     criba = c;
@@ -437,6 +439,14 @@
   fetch(caja.dataset.src).then(r => r.json()).then(d => {
     D = d; todos = preparar(d); kmTodos = km(todos);
     opciones("asunto", d.asuntos);
+    // every series, the latest first: date, voces and size
+    d.series.map((S, i) => [S, i]).sort((a, b) => b[0][1].localeCompare(a[0][1]) || b[0][3] - a[0][3])
+      .forEach(([S, i]) => {
+        const o = document.createElement("option");
+        const v = S[2].length > 70 ? S[2].slice(0, 70) + "…" : S[2];
+        o.value = i; o.textContent = fecha(S[1]) + " · " + v + " (" + fmt(S[3]) + ")";
+        $("serie-lista").append(o);
+      });
     opciones("camara", d.camaras, c => d.tribunales[c] ? d.tribunales[c] + " (" + c + ")" : c);
     opciones("firma", d.firmas);
     opciones("sentido", d.sentidos, s => s.toLowerCase());
